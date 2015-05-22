@@ -1,0 +1,27 @@
+{
+  "name": "sublime-code-cast-server",
+  "version": "0.0.0",
+  "description": "Catch some events from sublime in order to display the action on a page.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mraiur/sublime-code-cast-server.git"
+  },
+  "keywords": [
+    "sublime",
+    "cast",
+    "cast-server"
+  ],
+  "author": "mraiur",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mraiur/sublime-code-cast-server/issues"
+  },
+  "dependencies": {
+    "express": "^4.12.4",
+    "socket.io": "^1.3.5"
+  }
+}

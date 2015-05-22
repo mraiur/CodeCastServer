@@ -5,6 +5,7 @@ var fs = require('fs');
 // Keep track of the chat clients
 var clients = [];
 var port = 5005;
+var socketPort = 3500;
 
 var app = require('express')();
 var http = require('http').Server(app);
@@ -22,8 +23,8 @@ io.on('connection', function(socket){
     });
 });
 
-http.listen(3000, function(){
-    console.log('listening on *:3000');
+http.listen(socketPort, function(){
+    console.log('socket server listening on *:', socketPort);
 });
 
 
@@ -61,17 +62,10 @@ net.createServer(function (socket) {
         });
         // Log it to the server output too
         //io.emit('msg', { for: message });
-        console.log("===============================\n");
-        var msg = message.toString();
-        var parts = msg.split('||||');
-        if( parts  > 1 ){
-            var file = fs.readFileSync(parts[0]);
-            io.emit('file', file);
-            msg = parts[1];
-        }
-        console.log(parts, parts.length);
+        var msg = message+'';
+        console.log("msg", msg);
         io.emit('msg', msg);
-        process.stdout.write(message)
+        //process.stdout.write(message)
     }
 
 }).listen(port);
