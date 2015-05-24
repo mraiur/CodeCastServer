@@ -1,39 +1,72 @@
 <!doctype html>
 <html>
 <head>
-    <title>Socket.IO chat</title>
-    <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <title></title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html{ height:100%; }
         body { font: 13px Helvetica, Arial; height:100%;}
-        form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-        form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-        form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-        #messages { list-style-type: none; margin: 0; padding: 0; }
-        #messages li { padding: 5px 10px; }
-        #messages li:nth-child(odd) { background: #eee; }
-
-        #selection{ height:95%; width:100%;}
+        #selection{ height:100%; width:100%;}
     </style>
+    <script type="text/javascript" src="/ace-builds/src-min/ace.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-    <div id="fileName"></div>
-    <textarea id="selection"></textarea>
+    <div id="selection"></div>
 
-<script src="/socket.io/socket.io.js"></script>
 <script>
-    $(document).ready(function(){
-        //$("#selection").height("100%");
-    });
+
+    function doSelection( options ) {
+        var doc = editor.getSession().getDocument();
+        var lines = doc.getAllLines();
+
+        var offsetToPos = function( offset ) {
+            var row = 0, col = 0;
+            var pos = 0;
+            while ( row < lines.length && pos + lines[row].length < offset) {
+                pos += lines[row].length;
+                pos++; // for the newline
+                row++;
+            }
+            col = offset - pos;
+            return {row: row, column: col};
+        }
+        var start = offsetToPos( options.start ),
+                end = offsetToPos( options.end );
+
+        var sel = editor.getSelection();
+        var range = sel.getRange();
+        range.setStart( start.row, start.column );
+        range.setEnd( end.row, end.column );
+        sel.setSelectionRange( range );
+    }
+
     var socket = io();
+    var currentSelection = null;
     socket.on('msg', function(msg){
-        console.log('message: ', msg);
+
         if( typeof msg == "string"){
             var data = JSON.parse(msg);
-            $('#fileName').html(data.file);
-            $('#selection').html(data.selection);
+            if(data.action == 'select'){
+                document.title = data.file;
 
+                var sel = editor.getSelection();
+                currentSelection = data.selection;
+
+                doSelection(data.selection);
+
+            } else if( data.action == "changefile" ){
+
+                editor.setValue(data.data);
+
+            } else if( data.action == "update" ){
+
+                editor.setValue(data.data);
+
+                if(currentSelection!=null){
+                    doSelection(currentSelection);
+                }
+            }
         } else {
             console.log('not a string');
         }
@@ -41,7 +74,13 @@
 
     socket.on('file', function (msg) {
         console.log("file", msg);
-    })
-</script
+    });
+
+    var editor = ace.edit("selection");
+    editor.renderer.setShowGutter(false);
+    editor.setTheme("ace/theme/monokai");
+    editor.getSession().setMode("ace/mode/javascript");
+
+</script>
 </body>
 </html>

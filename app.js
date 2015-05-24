@@ -1,13 +1,13 @@
-// Load the TCP Library
 var net = require('net');
 var fs = require('fs');
 
-// Keep track of the chat clients
 var clients = [];
 var port = 5005;
 var socketPort = 3500;
 
-var app = require('express')();
+var express = require('express');
+var path = require('path');
+var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
@@ -15,60 +15,57 @@ app.get('/', function(req, res){
     res.sendFile(__dirname + '/index.html');
 });
 
+
+app.use( express.static(path.join(__dirname, 'bower_components')) );
+
 io.on('connection', function(socket){
-    console.log('a user connected');
+
+    console.log('User connected');
+
     io.emit('msg', {da : 1});
     socket.on('disconnect', function(){
-        console.log('user disconnected');
+        console.log('User disconected');
     });
 });
 
+
 http.listen(socketPort, function(){
-    console.log('socket server listening on *:', socketPort);
+    console.log('Socket CastServer server listening on *:', socketPort);
 });
 
 
-// Start a TCP Server
 net.createServer(function (socket) {
 
-    // Identify this client
     socket.name = socket.remoteAddress + ":" + socket.remotePort
 
-    // Put this new client in the list
     clients.push(socket);
 
-    // Send a nice welcome message and announce
+    socket.on('error', function() {
+
+    });
+
     socket.write("Welcome " + socket.name + "\n");
     broadcast(socket.name + " joined the chat\n", socket);
 
-    // Handle incoming messages from clients.
     socket.on('data', function (data) {
-        //broadcast(socket.name + "> " + data, socket);
         broadcast(data, socket);
     });
 
-    // Remove the client from the list when it leaves
     socket.on('end', function () {
         clients.splice(clients.indexOf(socket), 1);
         broadcast(socket.name + " left the chat.\n");
     });
 
-    // Send a message to all clients
     function broadcast(message, sender) {
         clients.forEach(function (client) {
-            // Don't want to send it to sender
             if (client === sender) return;
             client.write(message);
         });
-        // Log it to the server output too
-        //io.emit('msg', { for: message });
+
         var msg = message+'';
-        console.log("msg", msg);
         io.emit('msg', msg);
-        //process.stdout.write(message)
     }
 
 }).listen(port);
 
-// Put a friendly message on the terminal of the server.
-console.log("Chat server running at port "+port+"\n");
+console.log("CastServer server running at port "+port+"\n");
